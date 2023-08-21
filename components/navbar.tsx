@@ -1,144 +1,243 @@
+"use client";
 import {
-	Navbar as NextUINavbar,
-	NavbarContent,
-	NavbarMenu,
-	NavbarMenuToggle,
-	NavbarBrand,
-	NavbarItem,
-	NavbarMenuItem,
+  Navbar as NextUINavbar,
+  NavbarContent,
+  NavbarMenu,
+  NavbarMenuToggle,
+  NavbarItem,
+  NavbarMenuItem,
 } from "@nextui-org/navbar";
-import { Button } from "@nextui-org/button";
-import { Kbd } from "@nextui-org/kbd";
 import { Link } from "@nextui-org/link";
-import { Input } from "@nextui-org/input";
-
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Button,
+  Selection,
+} from "@nextui-org/react";
 import { link as linkStyles } from "@nextui-org/theme";
-
-import { siteConfig } from "@/config/site";
+import { languageConfig, siteConfig } from "@/config/site";
 import NextLink from "next/link";
 import clsx from "clsx";
+import { GithubIcon, DiscordIcon } from "@/components/icons";
+import { useMemo, useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-import { ThemeSwitch } from "@/components/theme-switch";
-import {
-	TwitterIcon,
-	GithubIcon,
-	DiscordIcon,
-	HeartFilledIcon,
-	SearchIcon,
-} from "@/components/icons";
-
-import { Logo } from "@/components/icons";
+import { Language, changeLanguage } from "../config/language/languageSlice";
+import { RootState } from "@/config/store";
+import TranslateIcon from "@mui/icons-material/Translate";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
 
 export const Navbar = () => {
-	const searchInput = (
-		<Input
-			aria-label="Search"
-			classNames={{
-				inputWrapper: "bg-default-100",
-				input: "text-sm",
-			}}
-			endContent={
-				<Kbd className="hidden lg:inline-block" keys={["command"]}>
-					K
-				</Kbd>
-			}
-			labelPlacement="outside"
-			placeholder="Search..."
-			startContent={
-				<SearchIcon className="text-base text-default-400 pointer-events-none flex-shrink-0" />
-			}
-			type="search"
-		/>
-	);
+  const { value: language } = useSelector((state: RootState) => state.language);
+  const [IsScrollTop, setIsScrollTop] = useState(true);
 
-	return (
-		<NextUINavbar maxWidth="xl" position="sticky">
-			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-				<NavbarBrand as="li" className="gap-3 max-w-fit">
-					<NextLink className="flex justify-start items-center gap-1" href="/">
-						<Logo />
-						<p className="font-bold text-inherit">ACME</p>
-					</NextLink>
-				</NavbarBrand>
-				<ul className="hidden lg:flex gap-4 justify-start ml-2">
-					{siteConfig.navItems.map((item) => (
-						<NavbarItem key={item.href}>
-							<NextLink
-								className={clsx(
-									linkStyles({ color: "foreground" }),
-									"data-[active=true]:text-primary data-[active=true]:font-medium"
-								)}
-								color="foreground"
-								href={item.href}
-							>
-								{item.label}
-							</NextLink>
-						</NavbarItem>
-					))}
-				</ul>
-			</NavbarContent>
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(
+    new Set(["español"])
+  );
+  const setLanguage = useDispatch();
 
-			<NavbarContent
-				className="hidden sm:flex basis-1/5 sm:basis-full"
-				justify="end"
-			>
-				<NavbarItem className="hidden sm:flex gap-2">
-					<Link isExternal href={siteConfig.links.twitter} aria-label="Twitter">
-						<TwitterIcon className="text-default-500" />
-					</Link>
-					<Link isExternal href={siteConfig.links.discord} aria-label="Discord">
-						<DiscordIcon className="text-default-500" />
-					</Link>
-					<Link isExternal href={siteConfig.links.github} aria-label="Github">
-						<GithubIcon className="text-default-500" />
-					</Link>
-					<ThemeSwitch />
-				</NavbarItem>
-				<NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
-				<NavbarItem className="hidden md:flex">
-					<Button
-            isExternal
-						as={Link}
-						className="text-sm font-normal text-default-600 bg-default-100"
-						href={siteConfig.links.sponsor}
-						startContent={<HeartFilledIcon className="text-danger" />}
-						variant="flat"
-					>
-						Sponsor
-					</Button>
-				</NavbarItem>
-			</NavbarContent>
+  const selectedValue = useMemo(() => {
+    const values = Array.from(selectedKeys).join(", ").replaceAll("_", " ");
 
-			<NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
-				<Link isExternal href={siteConfig.links.github} aria-label="Github">
-					<GithubIcon className="text-default-500" />
-				</Link>
-				<ThemeSwitch />
-				<NavbarMenuToggle />
-			</NavbarContent>
+    setLanguage(changeLanguage(values));
 
-			<NavbarMenu>
-				{searchInput}
-				<div className="mx-4 mt-2 flex flex-col gap-2">
-					{siteConfig.navMenuItems.map((item, index) => (
-						<NavbarMenuItem key={`${item}-${index}`}>
-							<Link
-								color={
-									index === 2
-										? "primary"
-										: index === siteConfig.navMenuItems.length - 1
-										? "danger"
-										: "foreground"
-								}
-								href="#"
-								size="lg"
-							>
-								{item.label}
-							</Link>
-						</NavbarMenuItem>
-					))}
-				</div>
-			</NavbarMenu>
-		</NextUINavbar>
-	);
+    let displayValue = "";
+    switch (values) {
+      case languageConfig.english.btnLanguage:
+        displayValue = languageConfig.spanish.btnLanguage;
+        break;
+      case languageConfig.english.btnLanguage2:
+        displayValue = languageConfig.spanish.btnLanguage2;
+        break;
+      case languageConfig.spanish.btnLanguage:
+        displayValue = languageConfig.english.btnLanguage;
+        break;
+      case languageConfig.spanish.btnLanguage2:
+        displayValue = languageConfig.english.btnLanguage2;
+        break;
+      default:
+        displayValue = language === Language.Spanish ? "Español" : "English";
+    }
+
+    return displayValue;
+  }, [selectedKeys, setLanguage, language]);
+
+  const handleLanguageChange = (keys: Selection) => {
+    setSelectedKeys(keys);
+    return;
+  };
+
+  const handleScroll = () => {
+    if (window.window.scrollY > 0) {
+      setIsScrollTop(false);
+    } else {
+      setIsScrollTop(true);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  return (
+    <NextUINavbar
+      shouldHideOnScroll
+      className={`md:bg-transparent backdrop-filter-none hover:bg-default transition-all ease-in-out ${
+        !IsScrollTop && "sm:bg-opacity-80 sm:bg-default "
+      }`}
+      maxWidth="xl"
+      position="sticky"
+    >
+      <NavbarContent
+        className={`basis-1/5 sm:basis-full transition-all ease-in-out ${
+          !IsScrollTop && "md:bg-opacity-80 md:bg-default rounded-b-lg"
+        }`}
+        justify="start"
+      >
+        <ul className="hidden lg:flex gap-4 justify-start ml-2 sm:mx-2 md:mx-10 lg:mx-5 ">
+          {languageConfig[
+            language === Language.Spanish ? Language.Spanish : Language.English
+          ].navItems.map((item) => (
+            <NavbarItem key={item.href}>
+              <NextLink
+                className={clsx(
+                  linkStyles({
+                    className:
+                      "border-b-2 border-transparent hover:border-b-2 hover:border-current transition-all ease-in-out text-white",
+                  }),
+                  "data-[active=true]:text-primary data-[active=true]:font-medium"
+                )}
+                color="foreground"
+                href={item.href}
+              >
+                {item.label}
+              </NextLink>
+            </NavbarItem>
+          ))}
+        </ul>
+      </NavbarContent>
+
+      <NavbarContent
+        className={`hidden sm:flex basis-1/5 sm:basis-full sm:mx-2 md:mx-10 lg:mx-5  transition-all ease-in-out ${
+          !IsScrollTop && "bg-opacity-80 bg-default rounded-b-lg"
+        }`}
+        justify="end"
+      >
+        <NavbarItem className="hidden sm:flex gap-2">
+          <Link isExternal href={siteConfig.links.linkedin} aria-label="Github">
+            <LinkedInIcon className="text-white" />
+          </Link>
+          <Link isExternal href={siteConfig.links.github} aria-label="Github">
+            <GithubIcon className="text-white" />
+          </Link>
+        </NavbarItem>
+        <NavbarItem className="pr-4">
+          <Dropdown>
+            <DropdownTrigger>
+              <Button
+                variant="bordered"
+                className="capitalize border-gray-300 text-white"
+              >
+                <TranslateIcon /> {selectedValue}
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label="Single selection actions"
+              variant="bordered"
+              disallowEmptySelection
+              selectionMode="single"
+              selectedKeys={selectedKeys}
+              onSelectionChange={handleLanguageChange}
+            >
+              {language === Language.Spanish ? (
+                <DropdownItem key="español">Español</DropdownItem>
+              ) : (
+                <DropdownItem key="spanish">Spanish</DropdownItem>
+              )}
+              {language === Language.Spanish ? (
+                <DropdownItem key="ingles">Ingles</DropdownItem>
+              ) : (
+                <DropdownItem key="english">English</DropdownItem>
+              )}
+            </DropdownMenu>
+          </Dropdown>
+        </NavbarItem>
+      </NavbarContent>
+
+      <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
+        <Link isExternal href={siteConfig.links.linkedin} aria-label="Github">
+          <LinkedInIcon className="text-white" />
+        </Link>
+        <Link isExternal href={siteConfig.links.github} aria-label="Github">
+          <GithubIcon className="text-white" />
+        </Link>
+
+        <NavbarMenuToggle id="menuMobile" />
+      </NavbarContent>
+
+      <NavbarMenu>
+        <div className="mx-4 mt-2 flex flex-col justify-center items-center gap-2">
+          {languageConfig[
+            language === Language.Spanish ? Language.Spanish : Language.English
+          ].navItems.map((item, index) => (
+            <NavbarMenuItem key={`${item}-${index}`}>
+              <Link
+                className="text-white"
+                href={item.href}
+                size="lg"
+                onClick={() => {
+                  console.log("click");
+                  if (document.getElementById("menuMobile")) {
+                    const menuMobile = document.getElementById(
+                      "menuMobile"
+                    ) as HTMLElement;
+                    menuMobile.click();
+                  }
+                }}
+              >
+                {item.label}
+              </Link>
+            </NavbarMenuItem>
+          ))}
+          <NavbarItem>
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  variant="bordered"
+                  className="capitalize border-gray-300 text-white"
+                >
+                  <TranslateIcon /> {selectedValue}
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                aria-label="Single selection actions"
+                variant="bordered"
+                disallowEmptySelection
+                selectionMode="single"
+                selectedKeys={selectedKeys}
+                onSelectionChange={handleLanguageChange}
+              >
+                {language === Language.Spanish ? (
+                  <DropdownItem key="español">Español</DropdownItem>
+                ) : (
+                  <DropdownItem key="spanish">Spanish</DropdownItem>
+                )}
+                {language === Language.Spanish ? (
+                  <DropdownItem key="ingles">Ingles</DropdownItem>
+                ) : (
+                  <DropdownItem key="english">English</DropdownItem>
+                )}
+              </DropdownMenu>
+            </Dropdown>
+          </NavbarItem>
+        </div>
+      </NavbarMenu>
+    </NextUINavbar>
+  );
 };
